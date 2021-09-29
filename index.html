@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+
+
+</head>
+
+<body>
+
+
+<button onclick="startAudio();">Start!</button>
+<p id="freq1"></p>
+<p id="freq2"></p>
+<p id="freq3"></p>
+<canvas id="oscilloscope"></canvas>
+
+<script>
+
+// create web audio api context
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+
+class Oscillator {
+  constructor() {
+    this.oscillator = audioCtx.createOscillator();
+    this.oscillator.type = 'sine';
+    this.oscillator.frequency.setValueAtTime(200, audioCtx.currentTime); // value in hertz
+
+    this.analyzer = audioCtx.createAnalyser();
+    this.oscillator.connect(this.analyzer);
+    this.analyzer.connect(audioCtx.destination);
+  }
+}
+
+let osc1 = new Oscillator();
+let osc2 = new Oscillator();
+let osc3 = new Oscillator();
+
+
+
+function startAudio() {
+
+  osc1.oscillator.start();
+  osc2.oscillator.start();
+  osc3.oscillator.start();
+
+  // Start the draw events too
+ //updateWaveform();
+  drawOscilloscope();
+
+}
+
+
+function mouseMove(e) {
+  osc2.oscillator.frequency.value = e.clientX/3;
+  osc3.oscillator.frequency.value = e.clientY/3;
+
+}
+
+
+function mapWaveformToXY(waveformT, waveformTMinus1) {
+
+  let x,y,dx,offset, x_draw, y_draw = 0;
+
+  // If all we have from the oscillator is waveform[i] = x = sin(t), then
+  // to get y = cos(t) we need to do some math!
+  // y = cos(t)
+  // y = sin(pi/2 + t)
+  // x = sin(t)
+  // asin(x) = t. Substitute t in y equation.
+  // y = sin(pi/2 + asin(x))
+  // This works, except the range of asin(x) is limited. The offset (pi/2) needs to be flipped
+  // when the slope of x is negative.
+
+  dx = waveformT - waveformTMinus1;
+  if (dx >= 0) {
+    offset = -Math.PI/2;
+  } else {
+    offset = Math.PI/2;
+  }
+  x = waveformT;
+  y = Math.sin(offset + Math.asin(x));
+
+  return [x,y];
+
+}
+
+onmousemove = mouseMove;
+
+
+function drawOscilloscope() {
+  requestAnimationFrame(drawOscilloscope);
+  const scopeCanvas = document.getElementById('oscilloscope');
+  const scopeContext = scopeCanvas.getContext('2d');
+
+
+  scopeCanvas.width = 768;
+  scopeCanvas.height = 768;
+
+  scopeContext.clearRect(0, 0, scopeCanvas.width, scopeCanvas.height);
+  scopeContext.beginPath();
+
+
+  let waveform1 = new Float32Array(osc1.analyzer.frequencyBinCount);
+  let waveform2 = new Float32Array(osc2.analyzer.frequencyBinCount);
+  let waveform3 = new Float32Array(osc3.analyzer.frequencyBinCount);
+  osc1.analyzer.getFloatTimeDomainData(waveform1);
+  osc2.analyzer.getFloatTimeDomainData(waveform2);
+  osc3.analyzer.getFloatTimeDomainData(waveform3);
+
+  for(let i = 1; i < waveform1.length; i++) {
+
+    const [x1,y1] = mapWaveformToXY(waveform1[i], waveform1[i-1]);
+    const [x2,y2] = mapWaveformToXY(waveform2[i], waveform2[i-1]);
+    const [x3,y3] = mapWaveformToXY(waveform3[i], waveform3[i-1]);
+
+    // Combine the oscillator plots to get interesting waveforms
+    const x = x1+x2+x3;
+    const y = y1+y2+y3;
+
+    // Scale x and y to graph them
+    const x_draw = (x + 3) * scopeCanvas.width / 8;
+    const y_draw = (y + 3) * scopeCanvas.height / 8;
+
+    if(i == 0) {
+        scopeContext.moveTo(x_draw, y_draw);
+    } else {
+        scopeContext.lineTo(x_draw, y_draw);
+    }
+
+
+  }
+  scopeContext.stroke();
+
+  document.getElementById("freq1").innerHTML = "Freq 1 Hz: " + osc1.oscillator.frequency.value;
+  document.getElementById("freq2").innerHTML = "Freq 2 Hz: " + osc2.oscillator.frequency.value;
+  document.getElementById("freq3").innerHTML = "Freq 3 Hz: " + osc3.oscillator.frequency.value;
+
+}
+
+
+
+
+</script>
+</body>
+
+</html>
