@@ -1,13 +1,22 @@
-<!DOCTYPE html>
-<html>
-
+<!doctype html>
+<html dir="ltr" lang="en">
 <head>
+    <meta charset="utf-8">
+    <title>spirolab</title>
+
   <link rel="stylesheet" href="fork.css">
 
 <style>
-  .fork-me {
-    background-color: rgb(0, 255, 149);
+.fork-me {
+  background-color: rgb(0, 255, 149);
 }
+
+
+body {
+  color:white;
+  background-color: black;
+}
+
 </style>
 </head>
 
@@ -68,9 +77,13 @@ function startAudio() {
 function mouseMove(e) {
   osc2.oscillator.frequency.value = e.clientX/3;
   osc3.oscillator.frequency.value = e.clientY/3;
-
 }
 
+function mouseMoveFirefox(e) {
+  osc2.oscillator.frequency.value = e.offsetX/3;
+  osc3.oscillator.frequency.value = e.offsetY/3;
+  console.log(e.offsetX);
+}
 
 function mapWaveformToXY(waveformT, waveformTMinus1) {
 
@@ -100,6 +113,8 @@ function mapWaveformToXY(waveformT, waveformTMinus1) {
 }
 
 onmousemove = mouseMove;
+// Firefox, although it might work for others?
+window.addEventListener('mousemove', mouseMoveFirefox);
 
 
 function drawOscilloscope() {
@@ -144,6 +159,8 @@ function drawOscilloscope() {
 
 
   }
+  scopeContext.strokeStyle = 'rgb(0, 255, 149)';
+  scopeContext.lineWidth = 4;
   scopeContext.stroke();
 
   document.getElementById("freq1").innerHTML = "Freq 1 Hz: " + osc1.oscillator.frequency.value;

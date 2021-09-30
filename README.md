@@ -10,6 +10,7 @@ Also known as a spirograph. This is a lab for audio spirographs!
 
 ## Bug fixes soon
   * Sine waves are too loud when added together, cause lots of unnecessary clipping.
+  * Mouse position not accessible on Firefox?
 
 ## Features soon
   * Better colors. I'm thinking green on dark background 🙂
