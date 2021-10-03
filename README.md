@@ -2,7 +2,7 @@
 A fun visualization of the combination of sine wave audio in the phase space.
 https://nolanhergert.github.io/spirolab/index.html
 
-Also known as a spirograph. This is a lab for audio spirographs!
+Also known as a spirograph or a lissajous figure, or a harmonograph. This is a lab for audio spirographs...spirolab :)
 
 Old notes and ideas:
   * https://nolanhergert.github.io/notes_old/programming/spirolab.html

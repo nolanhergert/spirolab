@@ -51,10 +51,15 @@ class Oscillator {
   constructor() {
     this.oscillator = audioCtx.createOscillator();
     this.oscillator.type = 'sine';
-    this.oscillator.frequency.setValueAtTime(200, audioCtx.currentTime); // value in hertz
+    this.oscillator.frequency.setValueAtTime(400, audioCtx.currentTime); // value in hertz
+
+    this.gainNode = audioCtx.createGain();
+    this.gainNode.gain.value = 0.3;
 
     this.analyzer = audioCtx.createAnalyser();
-    this.oscillator.connect(this.analyzer);
+
+    this.oscillator.connect(this.gainNode);
+    this.gainNode.connect(this.analyzer);
     this.analyzer.connect(audioCtx.destination);
   }
 }
@@ -79,17 +84,17 @@ function startAudio() {
 
 
 function mouseMove(e) {
-  osc2.oscillator.frequency.value = e.clientX/3;
-  osc3.oscillator.frequency.value = e.clientY/3;
+  osc2.oscillator.frequency.value = e.clientX/2;
+  osc3.oscillator.frequency.value = e.clientY/2;
 }
 
 function mouseMoveFirefox(e) {
-  osc2.oscillator.frequency.value = e.offsetX/3;
-  osc3.oscillator.frequency.value = e.offsetY/3;
+  osc2.oscillator.frequency.value = e.offsetX/2;
+  osc3.oscillator.frequency.value = e.offsetY/2;
   console.log(e.offsetX);
 }
 
-function mapWaveformToXY(waveformT, waveformTMinus1) {
+function mapWaveformToXY(waveformT, waveformTMinus1, gain) {
 
   let x,y,dx,offset, x_draw, y_draw = 0;
 
@@ -103,13 +108,13 @@ function mapWaveformToXY(waveformT, waveformTMinus1) {
   // This works, except the range of asin(x) is limited. The offset (pi/2) needs to be flipped
   // when the slope of x is negative.
 
-  dx = waveformT - waveformTMinus1;
+  dx = (waveformT - waveformTMinus1)/gain;
   if (dx >= 0) {
     offset = -Math.PI/2;
   } else {
     offset = Math.PI/2;
   }
-  x = waveformT;
+  x = waveformT / gain;
   y = Math.sin(offset + Math.asin(x));
 
   return [x,y];
@@ -118,7 +123,7 @@ function mapWaveformToXY(waveformT, waveformTMinus1) {
 
 onmousemove = mouseMove;
 // Firefox, although it might work for others?
-window.addEventListener('mousemove', mouseMoveFirefox);
+//window.addEventListener('mousemove', mouseMoveFirefox);
 
 
 function drawOscilloscope() {
@@ -143,9 +148,9 @@ function drawOscilloscope() {
 
   for(let i = 1; i < waveform1.length; i++) {
 
-    const [x1,y1] = mapWaveformToXY(waveform1[i], waveform1[i-1]);
-    const [x2,y2] = mapWaveformToXY(waveform2[i], waveform2[i-1]);
-    const [x3,y3] = mapWaveformToXY(waveform3[i], waveform3[i-1]);
+    const [x1,y1] = mapWaveformToXY(waveform1[i], waveform1[i-1], osc1.gainNode.gain.value);
+    const [x2,y2] = mapWaveformToXY(waveform2[i], waveform2[i-1], osc2.gainNode.gain.value);
+    const [x3,y3] = mapWaveformToXY(waveform3[i], waveform3[i-1], osc3.gainNode.gain.value);
 
     // Combine the oscillator plots to get interesting waveforms
     const x = x1+x2+x3;
