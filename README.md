@@ -10,7 +10,8 @@ Old notes and ideas:
 
 ## Features
   * Can adjust two frequencies at a time using the mouse. Explore your own chords, harmonics, and combination / tartini tones! (https://en.wikipedia.org/wiki/Combination_tone)
-  * Visualization is fast and works!
+  * Visualization is fast and is full screen!
+  * Keyboard shortcuts!
 
 ## Bug fixes soon
   * Sine waves are too loud when added together, cause lots of unnecessary clipping.
@@ -19,13 +20,9 @@ Old notes and ideas:
 ## Features soon
   * Touch support for phone.
   * Adjustable legends? Or just have map drop points and the legend is always frequency and amplitude?
-  * Full screen-ish.
   * Hint dots for good frequency combinations
   * Keyboard shortcuts
     * Up/Down/Left/Right adjust in .1 hz increments? Can set probably
-    * Shift/Ctrl keep horizontal/vertical constant.
-    * Shift + Ctrl keeps angle from origin constant.
-    * Spacebar freezes point on screen.
   * Enter amplitudes and frequencies manually. Amplitude can be negative...
   * Save links to fun ones and keep a running visualization of fun ones?
   * Look at old notes to see what other ideas I had
