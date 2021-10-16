@@ -5,21 +5,56 @@
     <title>spirolab</title>
 
   <link rel="stylesheet" href="fork.css">
-  <link rel="stylesheet" href="kbd.css" />
+  <link rel="stylesheet" href="kbd.css">
+  <link rel="stylesheet" href="style.css">
 <style>
 .fork-me {
   background-color: rgb(0, 255, 149);
 }
+
+body { margin:0; padding:0; } /* to remove the top and left whitespace */
+
+html, body { width:100%; height:100%; } /* just to be sure these are full screen*/
+
+canvas {
+    position: fixed;
+    display: block; /* To remove the scrollbars */
+    z-index: -10;
+} 
 
 body {
   color:white;
   background-color: black;
 }
 
+h1 {
+  margin: 0;
+}
+
+#controls {
+  z-index: 3;
+  cursor: default;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+td, th {
+  border: 1px solid #424242;
+  text-align: center;
+  padding: 8px;
+}
+
+
 </style>
 </head>
 
 <body>
+
+
+  <canvas id="oscilloscope"></canvas>  
+
 
 <div class="fork-me-wrapper">
   <div class="fork-me">
@@ -29,22 +64,51 @@ body {
   </div>
 </div>
 
+<div id="controls">
 <h1>spirolab!</h1>
-<!--
-<kbd>Shift</kbd> + <kbd>Esc</kbd>
-<p></p>
--->
 
-<button onclick="startAudio();">Start!</button>
+<table id="keyboard_shortcuts">
+  <tr>
+    <th>Key</th>
+    <th>Value</th>
+  </tr>
+  <tr>
+    <td><kbd id="Shift">Shift&emsp;</kbd></td>
+    <td>Scrub Horizontally</td>
+  </tr>
+  <tr>
+    <td><kbd id="Control">Ctrl</kbd></td>
+    <td>Scrub Vertically</td>
+  </tr>  
+  <tr>
+    <td><kbd id="Control">Ctrl</kbd> + <kbd id="Shift">Shift&emsp;</kbd></td>
+    <td>Scrub Diagonally!</td>
+  </tr>  
+  <tr>
+    <td><kbd id=" ">Spacebar</kbd></td>
+    <td id="mouse_control_state">Toggle mouse control</td>
+  </tr>  
+</table>
+<p></p>
+
+<button class="button-46" role="button" onclick="startAudio();" id="start_button">Start!</button>
+
 <p id="freq1"></p>
 <p id="freq2"></p>
 <p id="freq3"></p>
-<canvas id="oscilloscope"></canvas>
+</div>
+
 
 <script>
 
 // create web audio api context
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+const canvas = document.getElementById('oscilloscope');
+const context = canvas.getContext('2d');
+context.globalCompositeOperation = 'destination-over'
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
 
 class Oscillator {
@@ -72,6 +136,9 @@ let osc3 = new Oscillator();
 
 function startAudio() {
 
+  // Hide Start button
+  document.getElementById('start_button').style.display = 'none';
+
   osc1.oscillator.start();
   osc2.oscillator.start();
   osc3.oscillator.start();
@@ -82,16 +149,35 @@ function startAudio() {
 
 }
 
+listenToMouse = true;
+scrubHorizontal = false;
+scrubVertical = false;
+diagonalSlope = 1;
 
 function mouseMove(e) {
-  osc2.oscillator.frequency.value = e.clientX/2;
-  osc3.oscillator.frequency.value = e.clientY/2;
-}
+  if (!listenToMouse) return;
+  
+  if (scrubHorizontal == true && scrubVertical == true) {
+    // Maintain constant slope from origin, save off value for precision
+    if (diagonalSlope == 1) {
+      diagonalSlope = e.clientY / e.clientX;
+    }
+    osc2.oscillator.frequency.value = e.clientX / 2;
+    osc3.oscillator.frequency.value = e.clientX * diagonalSlope / 2;
+    return;
+  }
+  // Reset diagonal slope in any other scenario
+  diagonalSlope = 1;
+  
+  if (scrubHorizontal == true) {
+    osc2.oscillator.frequency.value = e.clientX/2;
+  } else if (scrubVertical == true) {
+    osc3.oscillator.frequency.value = e.clientY/2;
+  } else {
+    osc2.oscillator.frequency.value = e.clientX/2;
+    osc3.oscillator.frequency.value = e.clientY/2;
+  }
 
-function mouseMoveFirefox(e) {
-  osc2.oscillator.frequency.value = e.offsetX/2;
-  osc3.oscillator.frequency.value = e.offsetY/2;
-  console.log(e.offsetX);
 }
 
 function mapWaveformToXY(waveformT, waveformTMinus1, gain) {
@@ -121,22 +207,94 @@ function mapWaveformToXY(waveformT, waveformTMinus1, gain) {
 
 }
 
-onmousemove = mouseMove;
-// Firefox, although it might work for others?
-//window.addEventListener('mousemove', mouseMoveFirefox);
+window.addEventListener('mousemove', mouseMove);
+
+window.addEventListener("keydown", function (event) {
+
+
+  //console.log(event.key);
+  //document.getElementById(event.key).className = 'kbd-down';
+
+  switch (event.key) {
+    case " ":
+      // Set global
+      listenToMouse = !listenToMouse;
+      break;
+    case "Control":
+      scrubVertical = true;
+      break;
+    case "Shift":
+      scrubHorizontal = true;
+      break;
+  }
+
+
+});
+
+// Handle keyboard events
+window.addEventListener("keyup", function (event) {
+  if (event == undefined) {
+    return;
+  }
+
+  //console.log(event.key);
+  //document.getElementById(event.key).className = 'kbd-up';
+  
+
+  switch (event.key) {
+    case "Control":
+      scrubVertical = false;
+      break;
+    case "Shift":
+      scrubHorizontal = false;
+      break;
+  }
+
+  /*
+  switch (event.key) {
+    case "ArrowDown":
+      console.
+      // code for "down arrow" key press.
+      break;
+    case "ArrowUp":
+      // code for "up arrow" key press.
+      break;
+    case "ArrowLeft":
+      // code for "left arrow" key press.
+      break;
+    case "ArrowRight":
+      // code for "right arrow" key press.
+      break;
+    default:
+      return; // Quit when this doesn't handle the key event.
+  }
+   */
+
+  // Cancel the default action to avoid it being handled twice
+  //event.preventDefault();
+});
+// the last option dispatches the event to the listener first,
+// then dispatches event to window
 
 
 function drawOscilloscope() {
   requestAnimationFrame(drawOscilloscope);
-  const scopeCanvas = document.getElementById('oscilloscope');
-  const scopeContext = scopeCanvas.getContext('2d');
 
+  context.clearRect(0, 0, canvas.width, canvas.height);
 
-  scopeCanvas.width = 768;
-  scopeCanvas.height = 768;
+  const centerX = osc2.oscillator.frequency.value*2;
+  const centerY = osc3.oscillator.frequency.value*2;
+  const radius = 5;
+  // Draw current frequency position
+  context.beginPath();
+  context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+  context.fillStyle = 'purple';
+  context.fill();
+  context.lineWidth = 5;
+  context.strokeStyle = '#003300';
+  context.stroke();
 
-  scopeContext.clearRect(0, 0, scopeCanvas.width, scopeCanvas.height);
-  scopeContext.beginPath();
+  context.beginPath();
 
 
   let waveform1 = new Float32Array(osc1.analyzer.frequencyBinCount);
@@ -157,20 +315,20 @@ function drawOscilloscope() {
     const y = y1+y2+y3;
 
     // Scale x and y to graph them
-    const x_draw = (x + 3) * scopeCanvas.width / 8;
-    const y_draw = (y + 3) * scopeCanvas.height / 8;
+    const x_draw = 400 + x * Math.min(canvas.width, canvas.height) / 8;
+    const y_draw = 400 + y * Math.min(canvas.width, canvas.height) / 8;
 
     if(i == 0) {
-        scopeContext.moveTo(x_draw, y_draw);
+        context.moveTo(x_draw, y_draw);
     } else {
-        scopeContext.lineTo(x_draw, y_draw);
+        context.lineTo(x_draw, y_draw);
     }
 
 
   }
-  scopeContext.strokeStyle = 'rgb(0, 255, 149)';
-  scopeContext.lineWidth = 4;
-  scopeContext.stroke();
+  context.strokeStyle = 'rgb(0, 255, 149)';
+  context.lineWidth = 4;
+  context.stroke();
 
   document.getElementById("freq1").innerHTML = "Freq 1 Hz: " + osc1.oscillator.frequency.value;
   document.getElementById("freq2").innerHTML = "Freq 2 Hz: " + osc2.oscillator.frequency.value;
